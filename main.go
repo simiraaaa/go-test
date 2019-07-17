@@ -19,14 +19,14 @@ type User struct {
 }
 
 func main() {
-	db, err := database.Open()
+	// database module化したけど、 Open しかないので今の所あまりmoduleの意味がない
+	db := database.Open()
 	log.Println("connect")
-	if err != nil {
-		panic(err.Error())
-	}
+	// TODO: プログラム (サーバー ?) が終了したときに close したい
 	defer db.Close()
 	log.Println("select")
-	rows, err := db.Query("select * from users")
+	// 新しい順に10件取得する特に意味のない処理
+	rows, err := db.Query("select * from users order by created_at desc limit 10")
 	if err != nil {
 		panic(err.Error())
 	}
