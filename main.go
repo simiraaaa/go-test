@@ -85,6 +85,7 @@ func insertUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(user)
+	// validation はどうやるのが最適?
 	if user.Name == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		fmt.Fprintf(w, "name is required\n")
