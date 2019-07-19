@@ -28,6 +28,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.Method)
 	if r.Method == http.MethodGet {
 		getUsers(w, r)
+	} else if r.Method == http.MethodPost {
+		insertUser(w, r)
 	} else {
 		w.WriteHeader(http.StatusNotFound)
 	}
@@ -73,14 +75,48 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%s", json)
 }
 
-func insertUser() {
+func insertUser(w http.ResponseWriter, r *http.Request) {
+	// err := r.ParseForm()
+	// if err != nil {
+	// 	w.WriteHeader(http.StatusBadRequest)
+	// }
+	// formUser := r.Form.Get("user")
+	/*
+
+	  //Read body data to parse json
+	  body := make([]byte, length)
+	  length, err = req.Body.Read(body)
+	  if err != nil && err != io.EOF {
+	    w.WriteHeader(http.StatusInternalServerError)
+	    return
+	  }
+
+	  //parse json
+	  var jsonBody map[string]interface{}
+	  err = json.Unmarshal(body[:length], &jsonBody)
+	  if err != nil {
+	    w.WriteHeader(http.StatusInternalServerError)
+	    return
+	  }
+	  fmt.Printf("%v\n", jsonBody)
+
+	*/
+
+	dec := json.NewDecoder(r.Body)
+	var user User
+	err := dec.Decode(&user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	log.Println(user)
 	db = database.Open()
 	log.Println("connect")
 	// TODO: プログラム (サーバー ?) が終了したときに close したい
 	defer db.Close()
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
-	insert, err := db.Query("insert into users (name, created_at, updated_at) values ('TEST_USER_" + now + "', " + now + "," + now + ")")
+	insert, err := db.Query("insert into users (name, created_at, updated_at) values ('" + user.Name + "', " + now + "," + now + ")")
 
 	log.Println("insert")
 
