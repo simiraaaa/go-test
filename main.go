@@ -85,6 +85,11 @@ func insertUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(user)
+	if user.Name == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintf(w, "name is required\n")
+		return
+	}
 
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
