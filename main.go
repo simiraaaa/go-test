@@ -18,7 +18,7 @@ type CRUD struct {
 	create,
 	read,
 	update,
-	delete func(w http.ResponseWriter, r *http.Request)
+	delete func(http.ResponseWriter, *http.Request)
 }
 
 func callCRUD(crud CRUD, w http.ResponseWriter, r *http.Request) {
