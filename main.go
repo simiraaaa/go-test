@@ -13,33 +13,6 @@ import (
 	"github.com/simiraaaa/go-test/lib/database"
 )
 
-// CRUD http のメソッドによって呼び出し方を変更する。実装されていない場合は 404。 POST: create, GET: read, PUT: update, DELETE: delete
-type CRUD struct {
-	create,
-	read,
-	update,
-	delete func(http.ResponseWriter, *http.Request)
-}
-
-func callCRUD(crud CRUD, w http.ResponseWriter, r *http.Request) {
-	var f func(w http.ResponseWriter, r *http.Request)
-	switch r.Method {
-	case http.MethodGet:
-		f = crud.read
-	case http.MethodPost:
-		f = crud.create
-	case http.MethodPut:
-		f = crud.update
-	case http.MethodDelete:
-		f = crud.delete
-	}
-	if f == nil {
-		w.WriteHeader(http.StatusNotFound)
-	} else {
-		f(w, r)
-	}
-}
-
 // User は DB から users テーブルのデータを受け取ります
 type User struct {
 	ID        int
@@ -59,8 +32,8 @@ func main() {
 	http.ListenAndServe(":8085", nil)
 }
 
-var usersCRUD = CRUD{
-	create: func(w http.ResponseWriter, r *http.Request) {
+var usersCRUD = database.CRUD{
+	Create: func(w http.ResponseWriter, r *http.Request) {
 		dec := json.NewDecoder(r.Body)
 		var user User
 		err := dec.Decode(&user)
@@ -88,7 +61,7 @@ var usersCRUD = CRUD{
 
 		defer insert.Close()
 	},
-	read: func(w http.ResponseWriter, r *http.Request) {
+	Read: func(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("select")
 		const limit = 10
@@ -124,5 +97,5 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.Method)
 	// `show status like 'Threads_connected';` で確認したらプログラム終了時にコネクションが切れているのであえて close しなくても良さそう
 	// defer db.Close()
-	callCRUD(usersCRUD, w, r)
+	database.CallCRUD(usersCRUD, w, r)
 }
