@@ -23,9 +23,21 @@ type User struct {
 
 var db *sql.DB
 
+func main() {
+	// database module化したけど、 Open しかないので今の所あまりmoduleの意味がない
+	db = database.Open()
+	log.Println("connect")
+	http.HandleFunc("/users", handler) // ハンドラを登録してウェブページを表示させる
+	log.Println("http://localhost:8085")
+	http.ListenAndServe(":8085", nil)
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
 	log.Println("access /")
 	log.Println(r.Method)
+	// `show status like 'Threads_connected';` で確認したらプログラム終了時にコネクションが切れているのであえて close しなくても良さそう
+	// defer db.Close()
+
 	if r.Method == http.MethodGet {
 		getUsers(w, r)
 	} else if r.Method == http.MethodPost {
@@ -35,18 +47,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func main() {
-	http.HandleFunc("/users", handler) // ハンドラを登録してウェブページを表示させる
-	log.Println("http://localhost:8085")
-	http.ListenAndServe(":8085", nil)
-}
-
 func getUsers(w http.ResponseWriter, r *http.Request) {
-	// database module化したけど、 Open しかないので今の所あまりmoduleの意味がない
-	db = database.Open()
-	log.Println("connect")
-	// TODO: プログラム (サーバー ?) が終了したときに close したい
-	defer db.Close()
 	log.Println("select")
 	const limit = 10
 	// 新しい順に10件取得する
@@ -76,32 +77,6 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func insertUser(w http.ResponseWriter, r *http.Request) {
-	// err := r.ParseForm()
-	// if err != nil {
-	// 	w.WriteHeader(http.StatusBadRequest)
-	// }
-	// formUser := r.Form.Get("user")
-	/*
-
-	  //Read body data to parse json
-	  body := make([]byte, length)
-	  length, err = req.Body.Read(body)
-	  if err != nil && err != io.EOF {
-	    w.WriteHeader(http.StatusInternalServerError)
-	    return
-	  }
-
-	  //parse json
-	  var jsonBody map[string]interface{}
-	  err = json.Unmarshal(body[:length], &jsonBody)
-	  if err != nil {
-	    w.WriteHeader(http.StatusInternalServerError)
-	    return
-	  }
-	  fmt.Printf("%v\n", jsonBody)
-
-	*/
-
 	dec := json.NewDecoder(r.Body)
 	var user User
 	err := dec.Decode(&user)
@@ -110,10 +85,7 @@ func insertUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Println(user)
-	db = database.Open()
-	log.Println("connect")
-	// TODO: プログラム (サーバー ?) が終了したときに close したい
-	defer db.Close()
+
 	now := strconv.FormatInt(time.Now().Unix(), 10)
 
 	insert, err := db.Query("insert into users (name, created_at, updated_at) values ('" + user.Name + "', " + now + "," + now + ")")
